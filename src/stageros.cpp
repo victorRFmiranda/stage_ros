@@ -48,6 +48,7 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
 #include <rosgraph_msgs/Clock.h>
+#include <std_msgs/Int32.h>
 
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -63,6 +64,7 @@
 #define ODOM "odom"
 #define BASE_SCAN "base_scan"
 #define BASE_POSE_GROUND_TRUTH "base_pose_ground_truth"
+#define CRASH "crash_stall"
 #define CMD_VEL "cmd_vel"
 #define POSE "cmd_pose"
 #define POSESTAMPED "cmd_pose_stamped"
@@ -94,6 +96,7 @@ private:
         //ros publishers
         ros::Publisher odom_pub; //one odom
         ros::Publisher ground_truth_pub; //one ground truth
+        ros::Publisher crash_pub;
 
         std::vector<ros::Publisher> image_pubs; //multiple images
         std::vector<ros::Publisher> depth_pubs; //multiple depths
@@ -395,6 +398,9 @@ StageNode::SubscribeModels()
 
         new_robot->odom_pub = n_.advertise<nav_msgs::Odometry>(mapName(ODOM, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10);
         new_robot->ground_truth_pub = n_.advertise<nav_msgs::Odometry>(mapName(BASE_POSE_GROUND_TRUTH, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10);
+
+        new_robot->crash_pub = n_.advertise<std_msgs::Int32>(mapName(CRASH, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10);
+
         new_robot->cmdvel_sub = n_.subscribe<geometry_msgs::Twist>(mapName(CMD_VEL, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10, boost::bind(&StageNode::cmdvelReceived, this, r, _1));
         new_robot->pose_sub = n_.subscribe<geometry_msgs::Pose>(mapName(POSE, r, static_cast<Stg::Model*>(new_robot->positionmodel)), 10, boost::bind(&StageNode::poseReceived, this, r, _1));
 
@@ -553,8 +559,14 @@ StageNode::WorldCallback()
         //
         odom_msg.header.frame_id = mapName("odom", r, static_cast<Stg::Model*>(robotmodel->positionmodel));
         odom_msg.header.stamp = sim_time;
-
         robotmodel->odom_pub.publish(odom_msg);
+
+        // STALL and CRASH
+        // auto teste_stall = this->positionmodels[r]->Stalled();
+        std_msgs::Int32 crash_msg;
+        crash_msg.data = this->positionmodels[r]->Stalled();
+        robotmodel->crash_pub.publish(crash_msg);
+        // std::cout<<"Crash = "<<teste_stall<<std::endl;
 
         // broadcast odometry transform
         tf::Quaternion odomQ;
