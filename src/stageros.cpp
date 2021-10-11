@@ -267,6 +267,9 @@ StageNode::cb_reset_srv(std_srvs::Empty::Request& request, std_srvs::Empty::Resp
   for (size_t r = 0; r < this->positionmodels.size(); r++) {
     this->positionmodels[r]->SetPose(this->initial_poses[r]);
     this->positionmodels[r]->SetStall(false);
+    this->positionmodels[r]->est_pose.x = 0.0;
+    this->positionmodels[r]->est_pose.y = 0.0;
+    this->positionmodels[r]->est_pose.a = 0.0;
   }
   return true;
 }
@@ -296,6 +299,7 @@ StageNode::poseReceived(int idx, const boost::shared_ptr<geometry_msgs::Pose con
     pose.z = 0;
     pose.a = yaw;
     this->positionmodels[idx]->SetPose(pose);
+    this->positionmodels[idx]->SetStall(false);
 }
 
 void
