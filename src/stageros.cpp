@@ -300,6 +300,9 @@ StageNode::poseReceived(int idx, const boost::shared_ptr<geometry_msgs::Pose con
     pose.a = yaw;
     this->positionmodels[idx]->SetPose(pose);
     this->positionmodels[idx]->SetStall(false);
+    this->positionmodels[idx]->est_pose.x = 0.0;
+    this->positionmodels[idx]->est_pose.y = 0.0;
+    this->positionmodels[idx]->est_pose.a = 0.0;
 }
 
 void
